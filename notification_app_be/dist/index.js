@@ -1,0 +1,33 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const auth_1 = require("./auth");
+const logging_middleware_1 = require("logging-middleware");
+const routes_1 = __importDefault(require("./routes"));
+const app = (0, express_1.default)();
+const PORT = 4000;
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use("/api", routes_1.default);
+app.get("/health", (_req, res) => {
+    res.json({ status: "ok" });
+});
+async function start() {
+    try {
+        // Authenticate on startup so token is ready
+        await (0, auth_1.getAuthToken)();
+        await (0, logging_middleware_1.Log)("backend", "info", "service", `Server starting on port ${PORT}`);
+        app.listen(PORT, () => {
+            console.log(`[notification_app_be] Server running on http://localhost:${PORT}`);
+        });
+    }
+    catch (err) {
+        console.error("[notification_app_be] Failed to start:", err);
+        process.exit(1);
+    }
+}
+start();
